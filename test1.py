@@ -33,7 +33,7 @@ def run_test():
     me["age"]=99
 
     #add new keys
-    me["preferred_color"] = "gray"
+    me["preferred_color"] = "Gray"
 
     #read if exist
     if "middle_name" in me:#checks for existence
