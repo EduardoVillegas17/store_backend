@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest import mock, result
 from flask import Flask
 from about import me
 import json
@@ -59,4 +59,37 @@ def get_products_by_id(id):
             return json.dumps(prod)
 
     return "NOT FOUND"
-app.run(debug=True)
+
+
+@app.get("/api/products_category/<category>")
+def get_prods_category(category):
+    print("your category: ", category)
+    result=[]
+    category=category.lower()
+    for prod in mock_data:
+        if prod["category"].lower() == category:
+            result.append(prod)
+
+    return json.dumps(result)
+
+
+#Get /api/products_cheapest
+@app.get("/api/products_cheapest")
+def get_cheapest():
+    solution=mock_data[0]
+    for prod in mock_data[0]:
+        if prod["price"]<solution["price"]:
+            solution=prod
+    return json.dumps(solution)
+
+@app.get("/api/categories")
+def get_categories():
+    categories=[]
+    for product in mock_data:
+        cat=product["category"]
+        if not cat in categories:
+            categories.append(cat)
+
+    return json.dumps(categories)
+
+app.run(debug=True):
