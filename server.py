@@ -92,4 +92,4 @@ def get_categories():
 
     return json.dumps(categories)
 
-app.run(debug=True):
+app.run(debug=True)
