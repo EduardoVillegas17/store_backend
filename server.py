@@ -1,8 +1,13 @@
+from ast import Import
+from bson import ObjectId
 from flask import Flask, request
 from about import me
 from data import mock_data
 import json
 import random
+from config import db
+
+
 app= Flask('server')
 
 
@@ -31,7 +36,7 @@ def version():
     return "1.0"
 
 @app.get("/api/about") 
-def about_me():
+def about_me2():
     return me["first"]+""+me["last"]
     #return f'{me["first"]}{me["last"]}'
 
@@ -44,35 +49,55 @@ def about_json():
 #get /api/products
 #return mock_data a json string
 
+def fix_mongo_id(obj):
+    obj['id'] =str(obj["_id"])
+    del obj["_id"]
+    return obj
+
+
+#get /api/products
+#return mock_data as a json string
 @app.get("/api/products")
 def get_products():
-    return json.dumps(mock_data)
+    cursor=db.products.find({})
+    results=[]
+    for prod in cursor:
+        fix_mongo_id(prod)
+        results.append(prod)
+
+    return json.dumps(results)
 
 @app.post("/api/products")
 def save_product():
-    product = request.get_json()
+    product = request.get_json() #get a dictionary or a list
+    
+    #save the product
+    db.products.insert_one(product)
+    fix_mongo_id(product)
 
-    mock_data.append(product)
-    product["id"] = random.randint(1, 893214789)
     return json.dumps(product)
+
+
 
 @app.get("/api/products/<id>")
 def get_products_by_id(id):
-    for prod in mock_data:
-        if str(prod["id"])==id:
-            return json.dumps(prod)
+    prod=db.products.find_one({"id": ObjectId(id)})
+    if not prod:
+        return "NOT FOUND"
+    fix_mongo_id(prod)
 
-    return "NOT FOUND"
+    return json.dumps(prod)
+
+
 
 
 @app.get("/api/products_category/<category>")
 def get_prods_category(category):
-    print("your category: ", category)
+    cursor=db.products.find({"category": category})
     result=[]
-    category=category.lower()
-    for prod in mock_data:
-        if prod["category"].lower() == category:
-            result.append(prod)
+    for prod in cursor:
+        fix_mongo_id(prod)
+        result.append(prod)
 
     return json.dumps(result)
 
@@ -80,8 +105,9 @@ def get_prods_category(category):
 #Get /api/products_cheapest
 @app.get("/api/products_cheapest")
 def get_cheapest():
-    solution=mock_data[0]
-    for prod in mock_data[0]:
+    cursor = db.products.find({})
+    solution=cursor[0]
+    for prod in cursor:
         if prod["price"]<solution["price"]:
             solution=prod
     return json.dumps(solution)
@@ -89,7 +115,8 @@ def get_cheapest():
 @app.get("/api/categories")
 def get_categories():
     categories=[]
-    for product in mock_data:
+    cursor= db.products.find({})
+    for product in cursor:
         cat=product["category"]
         if not cat in categories:
             categories.append(cat)
@@ -99,8 +126,11 @@ def get_categories():
 
 @app.get("/api/count_products")
 def get_products_count():
-    count = len(mock_data)
+    cursor= db.products.find({})
 
+    count =0
+    for prod in cursor:
+        count+=1
     return json.dumps({"count":count})
 
 
