@@ -6,10 +6,11 @@ from data import mock_data
 import json
 import random
 from config import db
+from flask_cors import CORS
 
 
 app= Flask('server')
-
+CORS(app)#ALLOW REQUEST FROM ANY ORIGIN
 
 @app.get("/")
 def home():
@@ -136,7 +137,7 @@ def get_products_count():
 
 #return all prods whose totle contains text
 @app.get("/api/seach/<text>")
-def seach_product(text):
+def search_product(text):
     results=[]
 
     #do the magic here
@@ -147,5 +148,11 @@ def seach_product(text):
 
 
     return json.dumps(results)
+
+
+
+#############API ENDPOINTS = COUPON CODES##############
+
+
 
 app.run(debug=True)
